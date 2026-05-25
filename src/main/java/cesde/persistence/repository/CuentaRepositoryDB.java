@@ -81,4 +81,20 @@ public class CuentaRepositoryDB implements CuentaPersistencePort {
         }
         return false;
     }
+
+    @Override
+    public Cuenta buscarCuentaPorNumero(String numeroCuenta) {
+        String sql = "SELECT * FROM cuentas WHERE numero_cuenta = ?";
+        try (PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setString(1, numeroCuenta);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rowMapper.mapRow(rs);
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error al buscar cuenta por número", e);
+        }
+        return null;
+    }
 }

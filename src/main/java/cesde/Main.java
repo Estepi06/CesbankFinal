@@ -3,9 +3,7 @@ package cesde;
 import cesde.config.Config;
 import cesde.userinterface.MenuApp;
 
-/**
- * Clase principal de inicio de la aplicación CesBank.
- */
+
 public class Main {
 
     public static void main(String[] args) {

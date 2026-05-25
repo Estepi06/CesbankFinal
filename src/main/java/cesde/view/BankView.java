@@ -176,6 +176,36 @@ public class BankView {
     }
 
     /**
+     * Captura datos y realiza una transferencia desde una de las cuentas del cliente hacia otra cuenta por número.
+     */
+    public void realizarTransferencia(Cliente cliente) {
+        System.out.println("\n--- REALIZAR TRANSFERENCIA ---");
+        System.out.println("1. Desde Cuenta de Ahorros");
+        System.out.println("2. Desde Cuenta Corriente");
+        System.out.println("3. Cancelar");
+
+        int opcion = TypeValidator.validateInt("Seleccione la cuenta de origen:");
+        String tipoCuenta = "";
+
+        if (opcion == 1) tipoCuenta = "AHORROS";
+        else if (opcion == 2) tipoCuenta = "CORRIENTE";
+        else {
+            System.out.println("Operación cancelada.");
+            return;
+        }
+
+        String numeroDestino = TypeValidator.validateString("Ingrese el número de cuenta destino (ej. C123456789):");
+        double monto = TypeValidator.validateDouble("Ingrese el monto a transferir:");
+
+        String confirmar = TypeValidator.validateString("¿Confirmar transferencia? (S/N):");
+        if ("S".equalsIgnoreCase(confirmar)) {
+            bankServiceImpl.transferir(cliente, tipoCuenta, numeroDestino, monto);
+        } else {
+            System.out.println("Transferencia cancelada por el usuario.");
+        }
+    }
+
+    /**
      * Proceso de compra diferido a cuotas con la tarjeta de crédito.
      */
     public void realizarCompraTarjeta(Cliente cliente) {

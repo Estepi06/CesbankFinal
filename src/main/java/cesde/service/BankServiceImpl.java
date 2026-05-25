@@ -273,4 +273,81 @@ public class BankServiceImpl implements BankService {
         }
         return false;
     }
+
+    @Override
+    public boolean transferir(Cliente cliente, String tipoCuentaOrigen, String numeroCuentaDestino, double monto) {
+        if (monto <= 0) {
+            System.out.println("[Error] El monto a transferir debe ser mayor a 0.");
+            return false;
+        }
+
+        if (numeroCuentaDestino == null || numeroCuentaDestino.trim().isEmpty()) {
+            System.out.println("[Error] Número de cuenta destino inválido.");
+            return false;
+        }
+
+        // Evitar transferencias al mismo número de cuenta de origen
+        Cuenta destino = cuentaPersistencePort.buscarCuentaPorNumero(numeroCuentaDestino);
+        if (destino == null) {
+            System.out.println("[Error] Cuenta destino no encontrada.");
+            return false;
+        }
+
+        // Determinar cuenta origen del cliente
+        if ("AHORROS".equalsIgnoreCase(tipoCuentaOrigen)) {
+            CuentaAhorros ahorro = cliente.getCuentaAhorros();
+            if (ahorro == null) {
+                System.out.println("[Error] No posee una Cuenta de Ahorros para transferir.");
+                return false;
+            }
+            if (ahorro.getNumeroCuenta().equalsIgnoreCase(numeroCuentaDestino)) {
+                System.out.println("[Error] No puede transferir a la misma cuenta de origen.");
+                return false;
+            }
+
+            // Para transferencias desde ahorros no aplicamos la comisión de retiro (solo se debita el monto)
+            if (ahorro.getSaldo() < monto) {
+                System.out.println("[Rechazado] Fondos insuficientes en Cuenta de Ahorros.");
+                return false;
+            }
+
+            // Realizar débito y crédito
+            ahorro.setSaldo(ahorro.getSaldo() - monto);
+            destino.setSaldo(destino.getSaldo() + monto);
+            cuentaPersistencePort.actualizarSaldo(ahorro.getNumeroCuenta(), ahorro.getSaldo());
+            cuentaPersistencePort.actualizarSaldo(destino.getNumeroCuenta(), destino.getSaldo());
+            System.out.printf("[Éxito] Transferencia de $%.2f desde %s hacia %s realizada. Nuevo saldo origen: $%.2f%n",
+                    monto, ahorro.getNumeroCuenta(), destino.getNumeroCuenta(), ahorro.getSaldo());
+            return true;
+
+        } else if ("CORRIENTE".equalsIgnoreCase(tipoCuentaOrigen)) {
+            CuentaCorriente corriente = cliente.getCuentaCorriente();
+            if (corriente == null) {
+                System.out.println("[Error] No posee una Cuenta Corriente para transferir.");
+                return false;
+            }
+            if (corriente.getNumeroCuenta().equalsIgnoreCase(numeroCuentaDestino)) {
+                System.out.println("[Error] No puede transferir a la misma cuenta de origen.");
+                return false;
+            }
+
+            double limiteMaximo = corriente.getSaldo() * 1.20; // mismo criterio que retirar
+            if (monto > limiteMaximo) {
+                System.out.printf("[Rechazado] Transferencia supera el límite permitido. Su saldo es $%.2f, límite con sobregiro: $%.2f.%n",
+                        corriente.getSaldo(), limiteMaximo);
+                return false;
+            }
+
+            corriente.setSaldo(corriente.getSaldo() - monto);
+            destino.setSaldo(destino.getSaldo() + monto);
+            cuentaPersistencePort.actualizarSaldo(corriente.getNumeroCuenta(), corriente.getSaldo());
+            cuentaPersistencePort.actualizarSaldo(destino.getNumeroCuenta(), destino.getSaldo());
+            System.out.printf("[Éxito] Transferencia de $%.2f desde %s hacia %s realizada. Nuevo saldo origen: $%.2f%n",
+                    monto, corriente.getNumeroCuenta(), destino.getNumeroCuenta(), corriente.getSaldo());
+            return true;
+        }
+
+        System.out.println("[Error] Tipo de cuenta de origen inválido.");
+        return false;
+    }
 }

@@ -78,4 +78,14 @@ public interface BankService {
      * @return true si el pago se procesó y guardó correctamente.
      */
     boolean pagarTarjeta(Cliente cliente, double monto);
+
+    /**
+     * Realiza una transferencia desde una de las cuentas del cliente hacia otra cuenta identificada por su número.
+     * @param cliente Cliente autenticado que realiza la transferencia.
+     * @param tipoCuentaOrigen "AHORROS" o "CORRIENTE" indicando la cuenta de origen del cliente.
+     * @param numeroCuentaDestino Número de cuenta destino (ej. C123456789).
+     * @param monto Monto a transferir.
+     * @return true si la transferencia se realizó y persistió correctamente.
+     */
+    boolean transferir(Cliente cliente, String tipoCuentaOrigen, String numeroCuentaDestino, double monto);
 }

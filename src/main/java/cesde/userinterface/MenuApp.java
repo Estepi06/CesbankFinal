@@ -64,7 +64,7 @@ public class MenuApp {
     private void menuApplication(Cliente cliente) {
         int opcion = -1;
 
-        while (opcion != 6) {
+        while (opcion != 7) {
             System.out.println("\n=================================");
             System.out.println("            MENÚ CESBANK         ");
             System.out.println("=================================");
@@ -73,9 +73,10 @@ public class MenuApp {
             System.out.println("1. Ver Saldos / Cupos");
             System.out.println("2. Consignar (Ahorros / Corriente)");
             System.out.println("3. Retirar Dinero (Ahorros / Corriente)");
-            System.out.println("4. Realizar Compra con Tarjeta");
-            System.out.println("5. Pagar Tarjeta de Crédito");
-            System.out.println("6. Cerrar Sesión");
+            System.out.println("4. Transferir entre Cuentas");
+            System.out.println("5. Realizar Compra con Tarjeta");
+            System.out.println("6. Pagar Tarjeta de Crédito");
+            System.out.println("7. Cerrar Sesión");
             System.out.println("=================================");
             
             opcion = TypeValidator.validateInt("Seleccione una opción:");
@@ -91,12 +92,15 @@ public class MenuApp {
                     bankView.realizarRetiro(cliente);
                     break;
                 case 4:
-                    bankView.realizarCompraTarjeta(cliente);
+                    bankView.realizarTransferencia(cliente);
                     break;
                 case 5:
-                    bankView.realizarPagoTarjeta(cliente);
+                    bankView.realizarCompraTarjeta(cliente);
                     break;
                 case 6:
+                    bankView.realizarPagoTarjeta(cliente);
+                    break;
+                case 7:
                     System.out.println("\nCerrando sesión de " + cliente.getNombreCompleto() + "...");
                     break;
                 default:
