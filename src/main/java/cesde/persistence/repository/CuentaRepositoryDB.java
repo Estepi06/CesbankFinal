@@ -41,12 +41,13 @@ public class CuentaRepositoryDB implements CuentaPersistencePort {
 
     @Override
     public void crearCuenta(Cuenta cuenta, int clienteId, String tipoCuenta) {
-        String sql = "INSERT INTO cuentas (numero_cuenta, cliente_id, saldo, tipo_cuenta) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO cuentas (numero_cuenta, cliente_id, saldo, tipo_cuenta, fecha_apertura) VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, cuenta.getNumeroCuenta());
             ps.setInt(2, clienteId);
             ps.setDouble(3, cuenta.getSaldo());
             ps.setString(4, tipoCuenta.toUpperCase());
+            ps.setDate(5, java.sql.Date.valueOf(cuenta.getFechaApertura() != null ? cuenta.getFechaApertura() : java.time.LocalDate.now()));
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Error al registrar cuenta en la base de datos", e);
@@ -67,13 +68,12 @@ public class CuentaRepositoryDB implements CuentaPersistencePort {
 
     @Override
     public boolean existeNumeroCuenta(String numeroCuenta) {
-        // Consulta la base de datos para verificar si el número de cuenta ya está registrado
         String sql = "SELECT COUNT(*) FROM cuentas WHERE numero_cuenta = ?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, numeroCuenta);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return rs.getInt(1) > 0; // Si COUNT(*) > 0, el número ya existe
+                    return rs.getInt(1) > 0;
                 }
             }
         } catch (SQLException e) {
