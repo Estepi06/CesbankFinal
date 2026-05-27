@@ -40,12 +40,13 @@ public class TarjetaRepositoryDB implements TarjetaPersistencePort {
 
     @Override
     public void crearTarjeta(TarjetaCredito tarjeta, int clienteId) {
-        String sql = "INSERT INTO tarjetas (numero_tarjeta, cliente_id, cupo_disponible, deuda_actual) VALUES (?, ?, ?, ?)";
+        String sql = "INSERT INTO tarjetas (numero_tarjeta, cliente_id, cupo_disponible, deuda_actual, fecha_expedicion) VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, tarjeta.getNumeroCuenta());
             ps.setInt(2, clienteId);
             ps.setDouble(3, tarjeta.getCupoDisponible());
             ps.setDouble(4, tarjeta.getDeudaActual());
+            ps.setDate(5, java.sql.Date.valueOf(tarjeta.getFechaExpedicion() != null ? tarjeta.getFechaExpedicion() : java.time.LocalDate.now()));
             ps.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Error al registrar tarjeta de crédito en la base de datos", e);
@@ -67,13 +68,12 @@ public class TarjetaRepositoryDB implements TarjetaPersistencePort {
 
     @Override
     public boolean existeNumeroTarjeta(String numeroTarjeta) {
-        // Consulta la base de datos para verificar si el número de tarjeta ya está registrado
         String sql = "SELECT COUNT(*) FROM tarjetas WHERE numero_tarjeta = ?";
         try (PreparedStatement ps = connection.prepareStatement(sql)) {
             ps.setString(1, numeroTarjeta);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return rs.getInt(1) > 0; // Si COUNT(*) > 0, el número ya existe
+                    return rs.getInt(1) > 0;
                 }
             }
         } catch (SQLException e) {

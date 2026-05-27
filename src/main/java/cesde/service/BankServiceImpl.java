@@ -10,6 +10,7 @@ import java.util.Random;
 /**
  * Implementación del servicio bancario de CesBank.
  * Coordina las reglas de negocio del dominio con los adaptadores de persistencia (puertos de salida).
+ * Utiliza consultas JOIN eficientes estilo Lucia Store.
  */
 public class BankServiceImpl implements BankService {
 
@@ -27,6 +28,7 @@ public class BankServiceImpl implements BankService {
 
     @Override
     public Cliente login(String usuario, String clave) {
+        // Carga al cliente y todos sus productos en UNA sola llamada de base de datos usando LEFT JOIN
         Cliente cliente = clientePersistencePort.buscarPorUsuario(usuario);
         
         if (cliente == null) {
@@ -42,7 +44,6 @@ public class BankServiceImpl implements BankService {
         if (cliente.getClave().equals(clave)) {
             // Login exitoso
             restablecerIntentos(cliente);
-            cargarProductosCliente(cliente);
             System.out.println("[Login] ¡Inicio de sesión correcto! Bienvenido " + cliente.getNombreCompleto());
             return cliente;
         } else {
@@ -56,7 +57,7 @@ public class BankServiceImpl implements BankService {
     public void registrarCliente(Cliente cliente) {
         if (cliente == null) return;
 
-        // 1. Guardar el cliente en la tabla 'clientes'
+        // 1. Guardar el cliente en la tabla 'clientes' (con fecha de registro y nacimiento)
         clientePersistencePort.crearCliente(cliente);
 
         // 2. Generar número único y guardar Cuenta de Ahorros si el cliente la solicitó
@@ -120,22 +121,14 @@ public class BankServiceImpl implements BankService {
     public void cargarProductosCliente(Cliente cliente) {
         if (cliente == null) return;
 
-        // Cargar Cuenta de Ahorros
-        Cuenta cuentaAhorrosBase = cuentaPersistencePort.buscarCuentaPorClienteYTipo(cliente.getId(), "AHORROS");
-        if (cuentaAhorrosBase instanceof CuentaAhorros) {
-            cliente.setCuentaAhorros((CuentaAhorros) cuentaAhorrosBase);
-        }
-
-        // Cargar Cuenta Corriente
-        Cuenta cuentaCorrienteBase = cuentaPersistencePort.buscarCuentaPorClienteYTipo(cliente.getId(), "CORRIENTE");
-        if (cuentaCorrienteBase instanceof CuentaCorriente) {
-            cliente.setCuentaCorriente((CuentaCorriente) cuentaCorrienteBase);
-        }
-
-        // Cargar Tarjeta de Crédito
-        TarjetaCredito tarjeta = tarjetaPersistencePort.buscarTarjetaPorCliente(cliente.getId());
-        if (tarjeta != null) {
-            cliente.setTarjetaCredito(tarjeta);
+        // OPTIMIZACIÓN JOIN: Recargamos los productos del cliente usando un único query JOIN
+        Cliente cargado = clientePersistencePort.buscarPorUsuario(cliente.getUsuario());
+        if (cargado != null) {
+            cliente.setCuentaAhorros(cargado.getCuentaAhorros());
+            cliente.setCuentaCorriente(cargado.getCuentaCorriente());
+            cliente.setTarjetaCredito(cargado.getTarjetaCredito());
+            cliente.setFechaNacimiento(cargado.getFechaNacimiento());
+            cliente.setFechaRegistro(cargado.getFechaRegistro());
         }
     }
 

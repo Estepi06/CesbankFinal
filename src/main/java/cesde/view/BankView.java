@@ -4,60 +4,106 @@ import cesde.domain.Cliente;
 import cesde.domain.CuentaAhorros;
 import cesde.domain.CuentaCorriente;
 import cesde.domain.TarjetaCredito;
+import cesde.domain.validations.DateValidationRules;
+import cesde.domain.validations.ValidationRules;
 import cesde.service.BankServiceImpl;
 import cesde.util.TypeValidator;
+import cesde.util.date.DateValidator;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 /**
  * Capa de Presentación (View) que interactúa con el usuario a través de consola
  * y consume el servicio del banco.
+ * Utiliza validación de reglas avanzada y muestra información de fechas de productos.
  */
 public class BankView {
 
     private final BankServiceImpl bankServiceImpl;
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public BankView(BankServiceImpl bankServiceImpl) {
         this.bankServiceImpl = bankServiceImpl;
     }
 
     /**
-     * Registra un nuevo cliente pidiendo solo los datos personales.
-     * Los números de cuenta y tarjeta son AUTO-GENERADOS por el banco (no los ingresa el cliente).
+     * Registra un nuevo cliente aplicando validación de reglas avanzadas estilo Lucia Store.
      */
     public void registrarNuevoCliente() {
         System.out.println("\n=================================");
         System.out.println("       REGISTRO DE CLIENTE       ");
         System.out.println("=================================");
 
-        int id = TypeValidator.validateInt("Ingrese su número de identificación (Cédula):");
-        String nombre = TypeValidator.validateString("Ingrese su nombre completo:");
-        String celular = TypeValidator.validateString("Ingrese su número de celular:");
-        String usuario = TypeValidator.validateString("Cree su nombre de usuario (para iniciar sesión):");
-        String clave = TypeValidator.validateString("Cree su contraseña de acceso:");
+        // Validaciones basadas en Predicados
+        int id = TypeValidator.validateInt(
+                "Ingrese su número de identificación (Cédula):",
+                ValidationRules.VALID_ID,
+                "Error: La identificación debe ser un número positivo de al menos 5 dígitos."
+        );
 
-        // Construir el cliente con los datos personales
-        Cliente cliente = new Cliente(id, nombre, celular, usuario, clave, 0, false);
+        String nombre = TypeValidator.validateString(
+                "Ingrese su nombre completo:",
+                ValidationRules.VALID_NAME,
+                "Error: El nombre debe tener al menos 3 letras y no contener números ni caracteres especiales."
+        );
 
-        // El número de cuenta lo genera el banco automáticamente.
-        // Solo se pregunta si el cliente QUIERE el producto.
+        String celular = TypeValidator.validateString(
+                "Ingrese su número de celular (10 dígitos):",
+                ValidationRules.VALID_PHONE,
+                "Error: El celular debe contener exactamente 10 dígitos numéricos."
+        );
+
+        // Lectura y validación avanzada de fechas (Reglas de negocio bancarias)
+        LocalDate fechaNacimiento = null;
+        while (true) {
+            try {
+                fechaNacimiento = DateValidator.readDate("Ingrese su fecha de nacimiento");
+                DateValidationRules.validateNotFuture(fechaNacimiento, "Fecha de nacimiento");
+                DateValidationRules.validateMinAge(fechaNacimiento, 18, "Fecha de nacimiento");
+                break; // Validación exitosa
+            } catch (IllegalArgumentException e) {
+                System.out.println("Error de validación: " + e.getMessage());
+            }
+        }
+
+        String usuario = TypeValidator.validateString(
+                "Cree su nombre de usuario (mínimo 4 caracteres para iniciar sesión):",
+                ValidationRules.VALID_USERNAME,
+                "Error: El nombre de usuario debe contener al menos 4 caracteres sin espacios."
+        );
+
+        String clave = TypeValidator.validateString(
+                "Cree su contraseña de acceso (mínimo 4 caracteres):",
+                ValidationRules.VALID_PASSWORD,
+                "Error: La contraseña debe tener una longitud mínima de 4 caracteres."
+        );
+
+        // Construir el cliente incluyendo fechaNacimiento y fechaRegistro (LocalDate.now())
+        Cliente cliente = new Cliente(id, nombre, celular, usuario, clave, 0, false, fechaNacimiento, LocalDate.now());
 
         String tieneAhorros = TypeValidator.validateString("¿Desea abrir una Cuenta de Ahorros? (S/N):");
         if ("S".equalsIgnoreCase(tieneAhorros)) {
-            double saldoAhorros = TypeValidator.validateDouble("Ingrese el monto de apertura (saldo inicial):");
-            // Número generado por el banco → se asigna en BankServiceImpl, aquí va vacío temporalmente
+            double saldoAhorros = TypeValidator.validateDouble(
+                    "Ingrese el monto de apertura (saldo inicial mayor o igual a 0):",
+                    ValidationRules.POSITIVE_AMOUNT,
+                    "Error: El monto de apertura no puede ser negativo."
+            );
             cliente.setCuentaAhorros(new CuentaAhorros("", saldoAhorros));
         }
 
         String tieneCorriente = TypeValidator.validateString("¿Desea abrir una Cuenta Corriente? (S/N):");
         if ("S".equalsIgnoreCase(tieneCorriente)) {
-            double saldoCorriente = TypeValidator.validateDouble("Ingrese el monto de apertura (saldo inicial):");
-            // Número generado por el banco → se asigna en BankServiceImpl, aquí va vacío temporalmente
+            double saldoCorriente = TypeValidator.validateDouble(
+                    "Ingrese el monto de apertura (saldo inicial mayor o igual a 0):",
+                    ValidationRules.POSITIVE_AMOUNT,
+                    "Error: El monto de apertura no puede ser negativo."
+            );
             cliente.setCuentaCorriente(new CuentaCorriente("", saldoCorriente));
         }
 
         String tieneTarjeta = TypeValidator.validateString("¿Desea solicitar una Tarjeta de Crédito? (S/N):");
         if ("S".equalsIgnoreCase(tieneTarjeta)) {
-            // El cupo aprobado es fijo por política del banco: $5.000.000
-            // El número de tarjeta es generado por el banco → se asigna en BankServiceImpl
             double cupoFijo = 5000000.0;
             System.out.println("[Banco] Cupo aprobado para su Tarjeta de Crédito: $5.000.000");
             cliente.setTarjetaCredito(new TarjetaCredito("", cupoFijo, 0.0));
@@ -76,10 +122,8 @@ public class BankView {
         }
     }
 
-
     /**
      * Captura credenciales y realiza el login en el sistema.
-     * @return El cliente autenticado o null en caso de fallo.
      */
     public Cliente login() {
         System.out.println("\n=================================");
@@ -93,40 +137,52 @@ public class BankView {
     }
 
     /**
-     * Muestra de forma estética los saldos y cupos de los productos financieros del cliente.
+     * Muestra de forma estética los saldos y cupos de los productos, incluyendo fechas avanzadas.
      */
     public void mostrarSaldos(Cliente cliente) {
-        // Cargar productos actualizados de la base de datos
+        // Cargar productos actualizados usando la consulta JOIN optimizada
         bankServiceImpl.cargarProductosCliente(cliente);
 
-        System.out.println("\n==================================================");
-        System.out.println("             CONSULTA DE SALDOS - CESBANK         ");
-        System.out.println("==================================================");
-        System.out.println("Cliente: " + cliente.getNombreCompleto());
-        System.out.println("--------------------------------------------------");
+        System.out.println("\n=====================================================================");
+        System.out.println("                   CONSULTA DE SALDOS - CESBANK                      ");
+        System.out.println("=====================================================================");
+        System.out.println("Cliente          : " + cliente.getNombreCompleto());
+        System.out.println("Identificación   : " + cliente.getId());
+        if (cliente.getFechaNacimiento() != null) {
+            System.out.println("F. Nacimiento    : " + cliente.getFechaNacimiento().format(DATE_FORMATTER));
+        }
+        if (cliente.getFechaRegistro() != null) {
+            System.out.println("Cliente desde    : " + cliente.getFechaRegistro().format(DATE_FORMATTER));
+        }
+        System.out.println("---------------------------------------------------------------------");
 
         CuentaAhorros ahorro = cliente.getCuentaAhorros();
         if (ahorro != null) {
-            System.out.printf("  * Cuenta de Ahorros (%s) : $%,.2f%n", ahorro.getNumeroCuenta(), ahorro.getSaldo());
+            String fAp = (ahorro.getFechaApertura() != null) ? ahorro.getFechaApertura().format(DATE_FORMATTER) : "N/D";
+            System.out.printf("  * Cuenta de Ahorros (%s) : Saldo: $%,.2f | Apertura: %s%n", 
+                    ahorro.getNumeroCuenta(), ahorro.getSaldo(), fAp);
         } else {
             System.out.println("  * Cuenta de Ahorros      : No posee");
         }
 
         CuentaCorriente corriente = cliente.getCuentaCorriente();
         if (corriente != null) {
-            System.out.printf("  * Cuenta Corriente  (%s) : $%,.2f%n", corriente.getNumeroCuenta(), corriente.getSaldo());
+            String fAp = (corriente.getFechaApertura() != null) ? corriente.getFechaApertura().format(DATE_FORMATTER) : "N/D";
+            System.out.printf("  * Cuenta Corriente  (%s) : Saldo: $%,.2f | Apertura: %s%n", 
+                    corriente.getNumeroCuenta(), corriente.getSaldo(), fAp);
         } else {
             System.out.println("  * Cuenta Corriente       : No posee");
         }
 
         TarjetaCredito tc = cliente.getTarjetaCredito();
         if (tc != null) {
-            System.out.printf("  * Tarjeta Crédito   (%s) : Cupo Disponible: $%,.2f | Deuda: $%,.2f%n", 
-                    tc.getNumeroCuenta(), tc.getCupoDisponible(), tc.getDeudaActual());
+            String fExp = (tc.getFechaExpedicion() != null) ? tc.getFechaExpedicion().format(DATE_FORMATTER) : "N/D";
+            System.out.printf("  * Tarjeta Crédito   (%s) : Cupo: $%,.2f | Deuda: $%,.2f | Expedida: %s%n", 
+                    tc.getNumeroCuenta(), tc.getCupoDisponible(), tc.getDeudaActual(), fExp);
         } else {
             System.out.println("  * Tarjeta de Crédito     : No posee");
         }
-        System.out.println("==================================================");
+        System.out.println("=====================================================================");
     }
 
     /**
@@ -148,7 +204,11 @@ public class BankView {
             return;
         }
 
-        double monto = TypeValidator.validateDouble("Ingrese el monto a consignar:");
+        double monto = TypeValidator.validateDouble(
+                "Ingrese el monto a consignar:",
+                ValidationRules.POSITIVE_AMOUNT,
+                "Error: El monto a consignar debe ser mayor o igual a 0."
+        );
         bankServiceImpl.consignar(cliente, tipoCuenta, monto);
     }
 
@@ -171,12 +231,16 @@ public class BankView {
             return;
         }
 
-        double monto = TypeValidator.validateDouble("Ingrese el monto a retirar:");
+        double monto = TypeValidator.validateDouble(
+                "Ingrese el monto a retirar:",
+                ValidationRules.POSITIVE_AMOUNT,
+                "Error: El monto a retirar debe ser mayor o igual a 0."
+        );
         bankServiceImpl.retirar(cliente, tipoCuenta, monto);
     }
 
     /**
-     * Captura datos y realiza una transferencia desde una de las cuentas del cliente hacia otra cuenta por número.
+     * Captura datos y realiza una transferencia.
      */
     public void realizarTransferencia(Cliente cliente) {
         System.out.println("\n--- REALIZAR TRANSFERENCIA ---");
@@ -195,7 +259,11 @@ public class BankView {
         }
 
         String numeroDestino = TypeValidator.validateString("Ingrese el número de cuenta destino (ej. C123456789):");
-        double monto = TypeValidator.validateDouble("Ingrese el monto a transferir:");
+        double monto = TypeValidator.validateDouble(
+                "Ingrese el monto a transferir:",
+                ValidationRules.POSITIVE_AMOUNT,
+                "Error: El monto a transferir debe ser mayor o igual a 0."
+        );
 
         String confirmar = TypeValidator.validateString("¿Confirmar transferencia? (S/N):");
         if ("S".equalsIgnoreCase(confirmar)) {
@@ -217,7 +285,11 @@ public class BankView {
 
         System.out.println("\n--- COMPRA CON TARJETA DE CRÉDITO ---");
         System.out.printf("Cupo disponible actual: $%,.2f%n", tc.getCupoDisponible());
-        double monto = TypeValidator.validateDouble("Ingrese el valor de la compra:");
+        double monto = TypeValidator.validateDouble(
+                "Ingrese el valor de la compra:",
+                ValidationRules.POSITIVE_AMOUNT,
+                "Error: El monto de la compra debe ser mayor o igual a 0."
+        );
 
         if (monto > tc.getCupoDisponible()) {
             System.out.printf("[Rechazado] Compra declinada. El monto supera su cupo disponible de $%,.2f.%n", tc.getCupoDisponible());
@@ -271,7 +343,11 @@ public class BankView {
             return;
         }
 
-        double monto = TypeValidator.validateDouble("Ingrese el valor del abono a realizar:");
+        double monto = TypeValidator.validateDouble(
+                "Ingrese el valor del abono a realizar:",
+                ValidationRules.POSITIVE_AMOUNT,
+                "Error: El abono debe ser mayor o igual a 0."
+        );
         bankServiceImpl.pagarTarjeta(cliente, monto);
     }
 }
