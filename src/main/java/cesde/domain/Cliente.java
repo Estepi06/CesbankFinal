@@ -1,5 +1,7 @@
 package cesde.domain;
 
+import java.time.LocalDate;
+
 /**
  * Entidad que representa a un cliente del banco.
  * Contiene información de perfil, estado de seguridad del login, y productos financieros asociados.
@@ -12,6 +14,10 @@ public class Cliente {
     private String clave;
     private int intentosFallidos;
     private boolean bloqueado;
+    
+    // Fechas avanzadas del cliente
+    private LocalDate fechaNacimiento;
+    private LocalDate fechaRegistro;
 
     // Productos bancarios del cliente (pueden ser nulos si no los posee)
     private CuentaAhorros cuentaAhorros;
@@ -29,6 +35,19 @@ public class Cliente {
         this.clave = clave;
         this.intentosFallidos = intentosFallidos;
         this.bloqueado = bloqueado;
+        this.fechaRegistro = LocalDate.now(); // Por defecto
+    }
+
+    public Cliente(int id, String nombreCompleto, String celular, String usuario, String clave, int intentosFallidos, boolean bloqueado, LocalDate fechaNacimiento, LocalDate fechaRegistro) {
+        this.id = id;
+        this.nombreCompleto = nombreCompleto;
+        this.celular = celular;
+        this.usuario = usuario;
+        this.clave = clave;
+        this.intentosFallidos = intentosFallidos;
+        this.bloqueado = bloqueado;
+        this.fechaNacimiento = fechaNacimiento;
+        this.fechaRegistro = fechaRegistro != null ? fechaRegistro : LocalDate.now();
     }
 
     public int getId() {
@@ -85,6 +104,22 @@ public class Cliente {
 
     public void setBloqueado(boolean bloqueado) {
         this.bloqueado = bloqueado;
+    }
+
+    public LocalDate getFechaNacimiento() {
+        return fechaNacimiento;
+    }
+
+    public void setFechaNacimiento(LocalDate fechaNacimiento) {
+        this.fechaNacimiento = fechaNacimiento;
+    }
+
+    public LocalDate getFechaRegistro() {
+        return fechaRegistro;
+    }
+
+    public void setFechaRegistro(LocalDate fechaRegistro) {
+        this.fechaRegistro = fechaRegistro;
     }
 
     public CuentaAhorros getCuentaAhorros() {

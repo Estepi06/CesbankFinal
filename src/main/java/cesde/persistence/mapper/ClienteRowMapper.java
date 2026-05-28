@@ -19,6 +19,16 @@ public class ClienteRowMapper implements RowMapper<Cliente> {
         cliente.setClave(rs.getString("clave"));
         cliente.setIntentosFallidos(rs.getInt("intentos_fallidos"));
         cliente.setBloqueado(rs.getByte("bloqueado") == 1);
+        
+        java.sql.Date fReg = rs.getDate("fecha_registro");
+        if (fReg != null) {
+            cliente.setFechaRegistro(fReg.toLocalDate());
+        }
+        java.sql.Date fNac = rs.getDate("fecha_nacimiento");
+        if (fNac != null) {
+            cliente.setFechaNacimiento(fNac.toLocalDate());
+        }
+        
         return cliente;
     }
 }

@@ -1,18 +1,29 @@
 package cesde.domain;
 
+import java.time.LocalDate;
+
 /**
  * Clase base que representa una cuenta bancaria genérica.
  */
 public class Cuenta {
     protected String numeroCuenta;
     protected double saldo;
+    protected LocalDate fechaApertura;
 
     public Cuenta() {
+        this.fechaApertura = LocalDate.now();
     }
 
     public Cuenta(String numeroCuenta, double saldo) {
         this.numeroCuenta = numeroCuenta;
         this.saldo = saldo;
+        this.fechaApertura = LocalDate.now();
+    }
+
+    public Cuenta(String numeroCuenta, double saldo, LocalDate fechaApertura) {
+        this.numeroCuenta = numeroCuenta;
+        this.saldo = saldo;
+        this.fechaApertura = fechaApertura != null ? fechaApertura : LocalDate.now();
     }
 
     public String getNumeroCuenta() {
@@ -29,6 +40,14 @@ public class Cuenta {
 
     public void setSaldo(double saldo) {
         this.saldo = saldo;
+    }
+
+    public LocalDate getFechaApertura() {
+        return fechaApertura;
+    }
+
+    public void setFechaApertura(LocalDate fechaApertura) {
+        this.fechaApertura = fechaApertura;
     }
 
     /**

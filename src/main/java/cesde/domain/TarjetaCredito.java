@@ -1,5 +1,7 @@
 package cesde.domain;
 
+import java.time.LocalDate;
+
 /**
  * Tarjeta de Crédito: Hereda de Cuenta (con saldo base 0).
  * Maneja cupo disponible, deuda actual y permite realizar compras diferidas a cuotas con tasas de interés.
@@ -7,16 +9,26 @@ package cesde.domain;
 public class TarjetaCredito extends Cuenta {
     private double cupoDisponible;
     private double deudaActual;
+    private LocalDate fechaExpedicion;
 
     public TarjetaCredito() {
         super();
         this.saldo = 0; // Tarjeta de crédito maneja cupo y deuda, no saldo tradicional
+        this.fechaExpedicion = LocalDate.now();
     }
 
     public TarjetaCredito(String numeroTarjeta, double cupoDisponible, double deudaActual) {
         super(numeroTarjeta, 0);
         this.cupoDisponible = cupoDisponible;
         this.deudaActual = deudaActual;
+        this.fechaExpedicion = LocalDate.now();
+    }
+
+    public TarjetaCredito(String numeroTarjeta, double cupoDisponible, double deudaActual, LocalDate fechaExpedicion) {
+        super(numeroTarjeta, 0);
+        this.cupoDisponible = cupoDisponible;
+        this.deudaActual = deudaActual;
+        this.fechaExpedicion = fechaExpedicion != null ? fechaExpedicion : LocalDate.now();
     }
 
     public double getCupoDisponible() {
@@ -33,6 +45,14 @@ public class TarjetaCredito extends Cuenta {
 
     public void setDeudaActual(double deudaActual) {
         this.deudaActual = deudaActual;
+    }
+
+    public LocalDate getFechaExpedicion() {
+        return fechaExpedicion;
+    }
+
+    public void setFechaExpedicion(LocalDate fechaExpedicion) {
+        this.fechaExpedicion = fechaExpedicion;
     }
 
     /**

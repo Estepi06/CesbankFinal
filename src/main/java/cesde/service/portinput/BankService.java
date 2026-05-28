@@ -1,6 +1,8 @@
 package cesde.service.portinput;
 
 import cesde.domain.Cliente;
+import cesde.domain.Transaccion;
+import java.util.List;
 
 /**
  * Puerto de entrada que define los contratos de servicios bancarios del cajero automático.
@@ -88,4 +90,11 @@ public interface BankService {
      * @return true si la transferencia se realizó y persistió correctamente.
      */
     boolean transferir(Cliente cliente, String tipoCuentaOrigen, String numeroCuentaDestino, double monto);
+
+    /**
+     * Obtiene el historial de transacciones asociadas a un número de cuenta.
+     * @param numeroCuenta Número de cuenta a consultar.
+     * @return Lista de transacciones.
+     */
+    List<Transaccion> obtenerHistorialTransacciones(String numeroCuenta);
 }
