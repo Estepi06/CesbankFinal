@@ -24,14 +24,16 @@ public class Config {
         RowMapper<cesde.domain.Cliente> clienteMapper = new ClienteRowMapper();
         RowMapper<cesde.domain.Cuenta> cuentaMapper = new CuentaRowMapper();
         RowMapper<cesde.domain.TarjetaCredito> tarjetaMapper = new TarjetaRowMapper();
+        RowMapper<cesde.domain.Transaccion> transaccionMapper = new TransaccionRowMapper();
 
         // 3. Crear los adaptadores de persistencia (Repositories) que implementan los Puertos de Salida
         ClientePersistencePort clientePersistencePort = new ClienteRepositoryDB(connection, clienteMapper);
         CuentaPersistencePort cuentaPersistencePort = new CuentaRepositoryDB(connection, cuentaMapper);
         TarjetaPersistencePort tarjetaPersistencePort = new TarjetaRepositoryDB(connection, tarjetaMapper);
+        TransaccionPersistencePort transaccionPersistencePort = new TransaccionRepositoryDB(connection, transaccionMapper);
 
         // 4. Inyectar los repositorios en la implementación del Servicio (Capa de lógica)
-        BankServiceImpl bankService = new BankServiceImpl(clientePersistencePort, cuentaPersistencePort, tarjetaPersistencePort);
+        BankServiceImpl bankService = new BankServiceImpl(clientePersistencePort, cuentaPersistencePort, tarjetaPersistencePort, transaccionPersistencePort);
 
         // 5. Inyectar el servicio en la Vista de Consola
         BankView bankView = new BankView(bankService);

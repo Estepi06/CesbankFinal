@@ -45,7 +45,7 @@ public class MenuApp {
                             menuApplication(cliente);
                         }
                     } else {
-                        System.out.println("\n[Error] Credenciales incorrectas. Intente nuevamente o regístrese.");
+                        System.out.println("\n[Error] Inicio de sesión fallido. Clave incorrecta o usuario no encontrado.");
                     }
                     break;
                 case 3:
@@ -64,7 +64,7 @@ public class MenuApp {
     private void menuApplication(Cliente cliente) {
         int opcion = -1;
 
-        while (opcion != 7) {
+        while (opcion != 8) {
             System.out.println("\n=================================");
             System.out.println("            MENÚ CESBANK         ");
             System.out.println("=================================");
@@ -76,7 +76,8 @@ public class MenuApp {
             System.out.println("4. Transferir entre Cuentas");
             System.out.println("5. Realizar Compra con Tarjeta");
             System.out.println("6. Pagar Tarjeta de Crédito");
-            System.out.println("7. Cerrar Sesión");
+            System.out.println("7. Consultar Historial de Transacciones");
+            System.out.println("8. Cerrar Sesión");
             System.out.println("=================================");
             
             opcion = TypeValidator.validateInt("Seleccione una opción:");
@@ -101,6 +102,9 @@ public class MenuApp {
                     bankView.realizarPagoTarjeta(cliente);
                     break;
                 case 7:
+                    bankView.mostrarHistorialTransacciones(cliente);
+                    break;
+                case 8:
                     System.out.println("\nCerrando sesión de " + cliente.getNombreCompleto() + "...");
                     break;
                 default:

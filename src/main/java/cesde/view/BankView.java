@@ -350,4 +350,72 @@ public class BankView {
         );
         bankServiceImpl.pagarTarjeta(cliente, monto);
     }
+
+    /**
+     * Muestra el historial de transacciones de una cuenta elegida por el cliente.
+     */
+    public void mostrarHistorialTransacciones(Cliente cliente) {
+        System.out.println("\n--- CONSULTAR HISTORIAL DE TRANSACCIONES ---");
+        System.out.println("1. Cuenta de Ahorros");
+        System.out.println("2. Cuenta Corriente");
+        System.out.println("3. Tarjeta de Crédito");
+        System.out.println("4. Cancelar");
+
+        int opcion = TypeValidator.validateInt("Seleccione el producto a consultar:");
+        String numeroCuenta = "";
+        String nombreProducto = "";
+
+        if (opcion == 1) {
+            CuentaAhorros ahorro = cliente.getCuentaAhorros();
+            if (ahorro != null) {
+                numeroCuenta = ahorro.getNumeroCuenta();
+                nombreProducto = "Cuenta de Ahorros (" + numeroCuenta + ")";
+            } else {
+                System.out.println("[Error] No posee una Cuenta de Ahorros.");
+                return;
+            }
+        } else if (opcion == 2) {
+            CuentaCorriente corriente = cliente.getCuentaCorriente();
+            if (corriente != null) {
+                numeroCuenta = corriente.getNumeroCuenta();
+                nombreProducto = "Cuenta Corriente (" + numeroCuenta + ")";
+            } else {
+                System.out.println("[Error] No posee una Cuenta Corriente.");
+                return;
+            }
+        } else if (opcion == 3) {
+            TarjetaCredito tc = cliente.getTarjetaCredito();
+            if (tc != null) {
+                numeroCuenta = tc.getNumeroCuenta();
+                nombreProducto = "Tarjeta de Crédito (" + numeroCuenta + ")";
+            } else {
+                System.out.println("[Error] No posee una Tarjeta de Crédito.");
+                return;
+            }
+        } else {
+            System.out.println("Operación cancelada.");
+            return;
+        }
+
+        java.util.List<cesde.domain.Transaccion> transacciones = bankServiceImpl.obtenerHistorialTransacciones(numeroCuenta);
+
+        System.out.println("\n=========================================================================================");
+        System.out.println("                    HISTORIAL DE TRANSACCIONES - " + nombreProducto.toUpperCase());
+        System.out.println("=========================================================================================");
+        if (transacciones.isEmpty()) {
+            System.out.println("No se registran transacciones para este producto.");
+        } else {
+            System.out.printf("%-12s | %-22s | %-15s | %-38s%n", "FECHA", "TIPO", "MONTO", "DESCRIPCIÓN");
+            System.out.println("-----------------------------------------------------------------------------------------");
+            for (cesde.domain.Transaccion t : transacciones) {
+                String fechaStr = t.getFecha() != null ? t.getFecha().format(DATE_FORMATTER) : "N/D";
+                System.out.printf("%-12s | %-22s | $%-14,.2f | %-38s%n",
+                        fechaStr,
+                        t.getTipo(),
+                        t.getMonto(),
+                        t.getDescripcion());
+            }
+        }
+        System.out.println("=========================================================================================");
+    }
 }
