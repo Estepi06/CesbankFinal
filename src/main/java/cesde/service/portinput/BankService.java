@@ -88,4 +88,11 @@ public interface BankService {
      * @return true si la transferencia se realizó y persistió correctamente.
      */
     boolean transferir(Cliente cliente, String tipoCuentaOrigen, String numeroCuentaDestino, double monto);
+
+    /**
+     * Obtiene el historial de transacciones asociadas a un número de cuenta.
+     * @param numeroCuenta Número de cuenta a consultar.
+     * @return Lista de transacciones.
+     */
+    java.util.List<cesde.domain.Transaccion> obtenerHistorialTransacciones(String numeroCuenta);
 }

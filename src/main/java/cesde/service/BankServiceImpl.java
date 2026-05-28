@@ -5,25 +5,32 @@ import cesde.service.portinput.BankService;
 import cesde.service.portoutput.ClientePersistencePort;
 import cesde.service.portoutput.CuentaPersistencePort;
 import cesde.service.portoutput.TarjetaPersistencePort;
+import cesde.service.portoutput.TransaccionPersistencePort;
+
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Random;
 
 /**
  * Implementación del servicio bancario de CesBank.
  * Coordina las reglas de negocio del dominio con los adaptadores de persistencia (puertos de salida).
- * Utiliza consultas JOIN eficientes estilo Lucia Store.
+ * Utiliza consultas JOIN eficientes y registra el historial de transacciones en la base de datos.
  */
 public class BankServiceImpl implements BankService {
 
     private final ClientePersistencePort clientePersistencePort;
     private final CuentaPersistencePort cuentaPersistencePort;
     private final TarjetaPersistencePort tarjetaPersistencePort;
+    private final TransaccionPersistencePort transaccionPersistencePort;
 
     public BankServiceImpl(ClientePersistencePort clientePersistencePort,
                            CuentaPersistencePort cuentaPersistencePort,
-                           TarjetaPersistencePort tarjetaPersistencePort) {
+                           TarjetaPersistencePort tarjetaPersistencePort,
+                           TransaccionPersistencePort transaccionPersistencePort) {
         this.clientePersistencePort = clientePersistencePort;
         this.cuentaPersistencePort = cuentaPersistencePort;
         this.tarjetaPersistencePort = tarjetaPersistencePort;
+        this.transaccionPersistencePort = transaccionPersistencePort;
     }
 
     @Override
@@ -49,7 +56,7 @@ public class BankServiceImpl implements BankService {
         } else {
             // Clave incorrecta
             registrarIntentoFallido(cliente);
-            return cliente; // Retorna el cliente con el contador de intentos actualizado
+            return null; // Retorna null para denegar el acceso a la cuenta
         }
     }
 
@@ -66,6 +73,11 @@ public class BankServiceImpl implements BankService {
             cliente.getCuentaAhorros().setNumeroCuenta(numAhorros);
             cuentaPersistencePort.crearCuenta(cliente.getCuentaAhorros(), cliente.getId(), "AHORROS");
             System.out.println("[Banco] Número asignado a su Cuenta de Ahorros: " + numAhorros);
+            
+            // Registrar transacción de apertura
+            transaccionPersistencePort.registrarTransaccion(new Transaccion(
+                0, numAhorros, "CONSIGNACION", cliente.getCuentaAhorros().getSaldo(), LocalDate.now(), "Saldo inicial de apertura de Cuenta de Ahorros"
+            ));
         }
 
         // 3. Generar número único y guardar Cuenta Corriente si el cliente la solicitó
@@ -74,6 +86,11 @@ public class BankServiceImpl implements BankService {
             cliente.getCuentaCorriente().setNumeroCuenta(numCorriente);
             cuentaPersistencePort.crearCuenta(cliente.getCuentaCorriente(), cliente.getId(), "CORRIENTE");
             System.out.println("[Banco] Número asignado a su Cuenta Corriente: " + numCorriente);
+            
+            // Registrar transacción de apertura
+            transaccionPersistencePort.registrarTransaccion(new Transaccion(
+                0, numCorriente, "CONSIGNACION", cliente.getCuentaCorriente().getSaldo(), LocalDate.now(), "Saldo inicial de apertura de Cuenta Corriente"
+            ));
         }
 
         // 4. Generar número único y guardar Tarjeta de Crédito si el cliente la solicitó
@@ -171,6 +188,11 @@ public class BankServiceImpl implements BankService {
                 ahorro.consignar(monto);
                 cuentaPersistencePort.actualizarSaldo(ahorro.getNumeroCuenta(), ahorro.getSaldo());
                 System.out.printf("[Éxito] Consignación de $%.2f realizada en Cuenta de Ahorros. Nuevo saldo: $%.2f%n", monto, ahorro.getSaldo());
+                
+                // Registrar Transacción
+                transaccionPersistencePort.registrarTransaccion(new Transaccion(
+                    0, ahorro.getNumeroCuenta(), "CONSIGNACION", monto, LocalDate.now(), "Consignación en efectivo"
+                ));
                 return true;
             } else {
                 System.out.println("[Error] No posee una Cuenta de Ahorros.");
@@ -181,6 +203,11 @@ public class BankServiceImpl implements BankService {
                 corriente.consignar(monto);
                 cuentaPersistencePort.actualizarSaldo(corriente.getNumeroCuenta(), corriente.getSaldo());
                 System.out.printf("[Éxito] Consignación de $%.2f realizada en Cuenta Corriente. Nuevo saldo: $%.2f%n", monto, corriente.getSaldo());
+                
+                // Registrar Transacción
+                transaccionPersistencePort.registrarTransaccion(new Transaccion(
+                    0, corriente.getNumeroCuenta(), "CONSIGNACION", monto, LocalDate.now(), "Consignación en efectivo"
+                ));
                 return true;
             } else {
                 System.out.println("[Error] No posee una Cuenta Corriente.");
@@ -202,6 +229,11 @@ public class BankServiceImpl implements BankService {
                 if (ahorro.retirar(monto)) {
                     cuentaPersistencePort.actualizarSaldo(ahorro.getNumeroCuenta(), ahorro.getSaldo());
                     System.out.printf("[Éxito] Retiro de $%.2f exitoso. Comisión del 1.5%% cobrada. Nuevo saldo: $%.2f%n", monto, ahorro.getSaldo());
+                    
+                    // Registrar Transacción
+                    transaccionPersistencePort.registrarTransaccion(new Transaccion(
+                        0, ahorro.getNumeroCuenta(), "RETIRO", monto, LocalDate.now(), "Retiro por cajero (Comisión 1.5% aplicada)"
+                    ));
                     return true;
                 } else {
                     System.out.printf("[Rechazado] Fondos insuficientes. Recuerda que retirar $%.2f cuesta $%.2f en total (incluyendo 1.5%% de comisión) y tu saldo es $%.2f.%n", monto, monto * 1.015, ahorro.getSaldo());
@@ -215,6 +247,11 @@ public class BankServiceImpl implements BankService {
                 if (corriente.retirar(monto)) {
                     cuentaPersistencePort.actualizarSaldo(corriente.getNumeroCuenta(), corriente.getSaldo());
                     System.out.printf("[Éxito] Retiro de $%.2f exitoso (Sobregiro aplicado si el saldo es negativo). Nuevo saldo: $%.2f%n", monto, corriente.getSaldo());
+                    
+                    // Registrar Transacción
+                    transaccionPersistencePort.registrarTransaccion(new Transaccion(
+                        0, corriente.getNumeroCuenta(), "RETIRO", monto, LocalDate.now(), "Retiro por cajero (Permite sobregiro)"
+                    ));
                     return true;
                 } else {
                     System.out.printf("[Rechazado] Retiro supera el límite permitido. Su saldo es $%.2f, su límite con sobregiro (20%%) es $%.2f.%n", corriente.getSaldo(), corriente.getSaldo() * 1.20);
@@ -237,6 +274,11 @@ public class BankServiceImpl implements BankService {
         if (tc.realizarCompra(monto)) {
             tarjetaPersistencePort.actualizarCupoYDeuda(tc.getNumeroCuenta(), tc.getCupoDisponible(), tc.getDeudaActual());
             System.out.printf("[Éxito] Compra autorizada por $%.2f. Cupo restante: $%.2f, Deuda actual: $%.2f%n", monto, tc.getCupoDisponible(), tc.getDeudaActual());
+            
+            // Registrar Transacción
+            transaccionPersistencePort.registrarTransaccion(new Transaccion(
+                0, tc.getNumeroCuenta(), "COMPRA_TARJETA", monto, LocalDate.now(), "Compra diferida realizada"
+            ));
             return true;
         } else {
             System.out.printf("[Rechazado] Compra declinada. El monto de $%.2f supera su cupo disponible de $%.2f.%n", monto, tc.getCupoDisponible());
@@ -262,6 +304,11 @@ public class BankServiceImpl implements BankService {
             tarjetaPersistencePort.actualizarCupoYDeuda(tc.getNumeroCuenta(), tc.getCupoDisponible(), tc.getDeudaActual());
             double pagoAplicado = deudaOriginal - tc.getDeudaActual();
             System.out.printf("[Éxito] Pago aplicado por $%.2f. Nueva deuda: $%.2f, Cupo disponible: $%.2f%n", pagoAplicado, tc.getDeudaActual(), tc.getCupoDisponible());
+            
+            // Registrar Transacción
+            transaccionPersistencePort.registrarTransaccion(new Transaccion(
+                0, tc.getNumeroCuenta(), "PAGO_TARJETA", pagoAplicado, LocalDate.now(), "Abono a deuda de tarjeta"
+            ));
             return true;
         }
         return false;
@@ -311,6 +358,14 @@ public class BankServiceImpl implements BankService {
             cuentaPersistencePort.actualizarSaldo(destino.getNumeroCuenta(), destino.getSaldo());
             System.out.printf("[Éxito] Transferencia de $%.2f desde %s hacia %s realizada. Nuevo saldo origen: $%.2f%n",
                     monto, ahorro.getNumeroCuenta(), destino.getNumeroCuenta(), ahorro.getSaldo());
+            
+            // Registrar Transacciones en ambas cuentas
+            transaccionPersistencePort.registrarTransaccion(new Transaccion(
+                0, ahorro.getNumeroCuenta(), "TRANSFERENCIA_ENVIADA", monto, LocalDate.now(), "Transferencia enviada a la cuenta: " + destino.getNumeroCuenta()
+            ));
+            transaccionPersistencePort.registrarTransaccion(new Transaccion(
+                0, destino.getNumeroCuenta(), "TRANSFERENCIA_RECIBIDA", monto, LocalDate.now(), "Transferencia recibida desde la cuenta: " + ahorro.getNumeroCuenta()
+            ));
             return true;
 
         } else if ("CORRIENTE".equalsIgnoreCase(tipoCuentaOrigen)) {
@@ -337,10 +392,26 @@ public class BankServiceImpl implements BankService {
             cuentaPersistencePort.actualizarSaldo(destino.getNumeroCuenta(), destino.getSaldo());
             System.out.printf("[Éxito] Transferencia de $%.2f desde %s hacia %s realizada. Nuevo saldo origen: $%.2f%n",
                     monto, corriente.getNumeroCuenta(), destino.getNumeroCuenta(), corriente.getSaldo());
+            
+            // Registrar Transacciones en ambas cuentas
+            transaccionPersistencePort.registrarTransaccion(new Transaccion(
+                0, corriente.getNumeroCuenta(), "TRANSFERENCIA_ENVIADA", monto, LocalDate.now(), "Transferencia enviada a la cuenta: " + destino.getNumeroCuenta()
+            ));
+            transaccionPersistencePort.registrarTransaccion(new Transaccion(
+                0, destino.getNumeroCuenta(), "TRANSFERENCIA_RECIBIDA", monto, LocalDate.now(), "Transferencia recibida desde la cuenta: " + corriente.getNumeroCuenta()
+            ));
             return true;
         }
 
         System.out.println("[Error] Tipo de cuenta de origen inválido.");
         return false;
+    }
+
+    @Override
+    public List<Transaccion> obtenerHistorialTransacciones(String numeroCuenta) {
+        if (numeroCuenta == null || numeroCuenta.trim().isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        return transaccionPersistencePort.obtenerHistorialPorCuenta(numeroCuenta);
     }
 }

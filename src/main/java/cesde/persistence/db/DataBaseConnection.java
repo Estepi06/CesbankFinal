@@ -60,8 +60,20 @@ public class DataBaseConnection {
                 System.out.println("[DB] Columna 'fecha_expedicion' agregada a la tabla 'tarjetas'.");
             } catch (SQLException ignored) {}
 
+            // 4. Tabla de transacciones
+            try {
+                stmt.execute("CREATE TABLE IF NOT EXISTS transacciones (" +
+                             "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                             "numero_cuenta VARCHAR(50) NOT NULL, " +
+                             "tipo VARCHAR(50) NOT NULL, " +
+                             "monto DECIMAL(15, 2) NOT NULL, " +
+                             "fecha DATE NOT NULL, " +
+                             "descripcion VARCHAR(255))");
+                System.out.println("[DB] Tabla 'transacciones' creada o ya existente.");
+            } catch (SQLException ignored) {}
+
         } catch (SQLException e) {
-            System.out.println("[DB] Advertencia al ejecutar migraciones de columnas de fecha: " + e.getMessage());
+            System.out.println("[DB] Advertencia al ejecutar migraciones de columnas de fecha/tablas: " + e.getMessage());
         }
     }
 

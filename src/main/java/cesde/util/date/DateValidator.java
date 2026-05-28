@@ -15,10 +15,8 @@ public class DateValidator {
     }
 
     public static LocalDate readDate(String prompt, List<String> patterns) {
-        String hint = String.join("|", patterns);
-
         while (true) {
-            System.out.printf("%s (%s): ", prompt, hint);
+            System.out.printf("%s: ", prompt);
             String input = TypeValidator.validateString("");
 
             try {
