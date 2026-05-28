@@ -6,6 +6,7 @@ import cesde.view.BankView;
 
 /**
  * Menú principal interactivo de la aplicación por consola utilizando Scanner.
+ * Actualizado con la opción 7 para consultar el historial de transacciones.
  */
 public class MenuApp {
 

@@ -409,7 +409,7 @@ public class BankView {
             System.out.println("-----------------------------------------------------------------------------------------");
             for (cesde.domain.Transaccion t : transacciones) {
                 String fechaStr = t.getFecha() != null ? t.getFecha().format(DATE_FORMATTER) : "N/D";
-                System.out.printf("%-12s | %-22s | $%-14,.2f | %-38s%n",
+                System.out.printf("%-12s | %-22s | $%-,14.2f | %-38s%n",
                         fechaStr,
                         t.getTipo(),
                         t.getMonto(),
