@@ -2,7 +2,7 @@ package cesde.persistence.repository;
 
 import cesde.domain.TarjetaCredito;
 import cesde.persistence.mapper.RowMapper;
-import cesde.port.output.TarjetaPersistencePort;
+import cesde.service.portoutput.TarjetaPersistencePort;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

@@ -5,7 +5,7 @@ import cesde.domain.CuentaAhorros;
 import cesde.domain.CuentaCorriente;
 import cesde.domain.TarjetaCredito;
 import cesde.persistence.mapper.RowMapper;
-import cesde.port.output.ClientePersistencePort;
+import cesde.service.portoutput.ClientePersistencePort;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

@@ -2,7 +2,7 @@ package cesde.persistence.repository;
 
 import cesde.domain.Cuenta;
 import cesde.persistence.mapper.RowMapper;
-import cesde.port.output.CuentaPersistencePort;
+import cesde.service.portoutput.CuentaPersistencePort;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
