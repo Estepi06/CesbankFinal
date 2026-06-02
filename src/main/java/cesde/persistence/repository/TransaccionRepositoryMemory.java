@@ -1,7 +1,7 @@
 package cesde.persistence.repository;
 
 import cesde.domain.Transaccion;
-import cesde.port.output.TransaccionPersistencePort;
+import cesde.service.portoutput.TransaccionPersistencePort;
 
 import java.util.ArrayList;
 import java.util.HashMap;
