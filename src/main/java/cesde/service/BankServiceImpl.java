@@ -1,11 +1,11 @@
 package cesde.service;
 
 import cesde.domain.*;
-import cesde.service.portinput.BankService;
-import cesde.service.portoutput.ClientePersistencePort;
-import cesde.service.portoutput.CuentaPersistencePort;
-import cesde.service.portoutput.TarjetaPersistencePort;
-import cesde.service.portoutput.TransaccionPersistencePort;
+import cesde.port.input.BankService;
+import cesde.port.output.ClientePersistencePort;
+import cesde.port.output.CuentaPersistencePort;
+import cesde.port.output.TarjetaPersistencePort;
+import cesde.port.output.TransaccionPersistencePort;
 
 import java.time.LocalDate;
 import java.util.List;

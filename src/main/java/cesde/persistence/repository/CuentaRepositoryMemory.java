@@ -3,7 +3,7 @@ package cesde.persistence.repository;
 import cesde.domain.Cuenta;
 import cesde.domain.CuentaAhorros;
 import cesde.domain.CuentaCorriente;
-import cesde.service.portoutput.CuentaPersistencePort;
+import cesde.port.output.CuentaPersistencePort;
 
 import java.util.HashMap;
 import java.util.Map;

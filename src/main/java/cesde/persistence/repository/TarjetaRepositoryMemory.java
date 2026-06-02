@@ -1,7 +1,7 @@
 package cesde.persistence.repository;
 
 import cesde.domain.TarjetaCredito;
-import cesde.service.portoutput.TarjetaPersistencePort;
+import cesde.port.output.TarjetaPersistencePort;
 
 import java.util.HashMap;
 import java.util.Map;

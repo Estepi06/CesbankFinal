@@ -4,7 +4,8 @@ import cesde.persistence.db.DataBaseConnection;
 import cesde.persistence.mapper.*;
 import cesde.persistence.repository.*;
 import cesde.service.BankServiceImpl;
-import cesde.service.portoutput.*;
+import cesde.port.output.*;
+import cesde.port.input.BankService;
 import cesde.userinterface.MenuApp;
 import cesde.view.BankView;
 
@@ -68,7 +69,7 @@ public class Config {
         }
 
         // 4. Inyectar los repositorios en la implementación del Servicio (Capa de lógica)
-        BankServiceImpl bankService = new BankServiceImpl(
+        BankService bankService = new BankServiceImpl(
             clientePersistencePort, cuentaPersistencePort, tarjetaPersistencePort, transaccionPersistencePort
         );
 
