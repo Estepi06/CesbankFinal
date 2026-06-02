@@ -1,7 +1,7 @@
 package cesde.persistence.repository;
 
 import cesde.domain.Cliente;
-import cesde.service.portoutput.ClientePersistencePort;
+import cesde.port.output.ClientePersistencePort;
 
 import java.util.HashMap;
 import java.util.Map;

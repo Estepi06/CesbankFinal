@@ -2,7 +2,7 @@ package cesde.persistence.repository;
 
 import cesde.domain.Transaccion;
 import cesde.persistence.mapper.RowMapper;
-import cesde.service.portoutput.TransaccionPersistencePort;
+import cesde.port.output.TransaccionPersistencePort;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

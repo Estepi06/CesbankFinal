@@ -6,7 +6,7 @@ import cesde.domain.CuentaCorriente;
 import cesde.domain.TarjetaCredito;
 import cesde.domain.validations.DateValidationRules;
 import cesde.domain.validations.ValidationRules;
-import cesde.service.BankServiceImpl;
+import cesde.port.input.BankService;
 import cesde.util.TypeValidator;
 import cesde.util.date.DateValidator;
 
@@ -20,11 +20,11 @@ import java.time.format.DateTimeFormatter;
  */
 public class BankView {
 
-    private final BankServiceImpl bankServiceImpl;
+    private final BankService bankService;
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-    public BankView(BankServiceImpl bankServiceImpl) {
-        this.bankServiceImpl = bankServiceImpl;
+    public BankView(BankService bankService) {
+        this.bankService = bankService;
     }
 
     /**
@@ -110,7 +110,7 @@ public class BankView {
         }
 
         try {
-            bankServiceImpl.registrarCliente(cliente);
+            bankService.registrarCliente(cliente);
             System.out.println("\n╔══════════════════════════════════════╗");
             System.out.println("║  ¡Registro exitoso! Ya puede         ║");
             System.out.println("║  iniciar sesión con su usuario.       ║");
@@ -133,7 +133,7 @@ public class BankView {
         String usuario = TypeValidator.validateString("Ingrese su usuario:");
         String clave = TypeValidator.validateString("Ingrese su contraseña:");
 
-        return bankServiceImpl.login(usuario, clave);
+        return bankService.login(usuario, clave);
     }
 
     /**
@@ -141,7 +141,7 @@ public class BankView {
      */
     public void mostrarSaldos(Cliente cliente) {
         // Cargar productos actualizados usando la consulta JOIN optimizada
-        bankServiceImpl.cargarProductosCliente(cliente);
+        bankService.cargarProductosCliente(cliente);
 
         System.out.println("\n=====================================================================");
         System.out.println("                   CONSULTA DE SALDOS - CESBANK                      ");
@@ -209,7 +209,7 @@ public class BankView {
                 ValidationRules.POSITIVE_AMOUNT,
                 "Error: El monto a consignar debe ser mayor o igual a 0."
         );
-        bankServiceImpl.consignar(cliente, tipoCuenta, monto);
+        bankService.consignar(cliente, tipoCuenta, monto);
     }
 
     /**
@@ -236,7 +236,7 @@ public class BankView {
                 ValidationRules.POSITIVE_AMOUNT,
                 "Error: El monto a retirar debe ser mayor o igual a 0."
         );
-        bankServiceImpl.retirar(cliente, tipoCuenta, monto);
+        bankService.retirar(cliente, tipoCuenta, monto);
     }
 
     /**
@@ -267,7 +267,7 @@ public class BankView {
 
         String confirmar = TypeValidator.validateString("¿Confirmar transferencia? (S/N):");
         if ("S".equalsIgnoreCase(confirmar)) {
-            bankServiceImpl.transferir(cliente, tipoCuenta, numeroDestino, monto);
+            bankService.transferir(cliente, tipoCuenta, numeroDestino, monto);
         } else {
             System.out.println("Transferencia cancelada por el usuario.");
         }
@@ -319,7 +319,7 @@ public class BankView {
 
         String confirmar = TypeValidator.validateString("¿Confirmar transacción? (S/N):");
         if ("S".equalsIgnoreCase(confirmar)) {
-            bankServiceImpl.comprarConTarjeta(cliente, monto);
+            bankService.comprarConTarjeta(cliente, monto);
         } else {
             System.out.println("Compra cancelada por el usuario.");
         }
@@ -348,7 +348,7 @@ public class BankView {
                 ValidationRules.POSITIVE_AMOUNT,
                 "Error: El abono debe ser mayor o igual a 0."
         );
-        bankServiceImpl.pagarTarjeta(cliente, monto);
+        bankService.pagarTarjeta(cliente, monto);
     }
 
     /**
@@ -397,7 +397,7 @@ public class BankView {
             return;
         }
 
-        java.util.List<cesde.domain.Transaccion> transacciones = bankServiceImpl.obtenerHistorialTransacciones(numeroCuenta);
+        java.util.List<cesde.domain.Transaccion> transacciones = bankService.obtenerHistorialTransacciones(numeroCuenta);
 
         System.out.println("\n=========================================================================================");
         System.out.println("                    HISTORIAL DE TRANSACCIONES - " + nombreProducto.toUpperCase());
